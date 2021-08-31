@@ -65,8 +65,6 @@ fn dump_linear_to_image(
     handle: u32,
     verbose: bool,
 ) -> RgbImage {
-    let size = (size.0, size.1 / 64);
-
     let length = pitch * size.1 / (bpp / 8);
 
     println!(
@@ -248,6 +246,14 @@ fn find_framebuffer(driver: &mut AnyDriver<Card>, verbose: bool) -> Option<Handl
         }
     }
 
+    for encoder in resource_handles.encoders() {
+        let info = driver.dev().get_encoder(*encoder).unwrap();
+
+        if verbose {
+            println!("Encoder Info: {:?}", info);
+        }
+    }
+
     None
 }
 
@@ -307,7 +313,9 @@ fn main() {
     let adress = matches.value_of("address").unwrap();
     if screenshot {
         if let Some(fb) = find_framebuffer(&mut driver, verbose) {
-            let img = dump_framebuffer_to_image(&mut driver, fb, verbose);
+            let fbinfo = ffi::fb_cmd(driver.dev().as_raw_fd(), fb.into()).unwrap();
+            let img = dump_linear_to_image(&mut driver, fbinfo.pitch, (fbinfo.width, fbinfo.height), fbinfo.bpp, fbinfo.handle, true);
+            // let img = dump_framebuffer_to_image(&mut driver, fb, verbose);
             save_screenshot(&img).unwrap();
         } else {
             println!("No framebuffer found!");

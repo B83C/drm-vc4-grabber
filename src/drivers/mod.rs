@@ -51,7 +51,7 @@ where
     Dev: DriverCard,
 {
     pub fn of(dev: Dev) -> Result<AnyDriver<Dev>, DriverError> {
-        let driver = dev.get_driver()?;
+        let driver = dev.get_driver().unwrap();
         let driver_name = driver.name().to_str().unwrap();
         let driver = match driver_name {
             "v3d" => Ok(AnyDriver::V3D(V3DDriver::of(dev))),
